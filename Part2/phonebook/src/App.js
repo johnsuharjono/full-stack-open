@@ -1,18 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Filter from "./Components/Filter";
 import PersonForm from "./Components/PersonForm";
 import Persons from "./Components/Persons";
+import axios from "axios";
 
 const App = () => {
   const [persons, setPersons] = useState([
     { name: "Artorito Hellas", number: "040-123456", id: 1 },
     { name: "Ada Loveplace", number: "39-44-5323523", id: 2 },
-    { name: "Dan Kontolodon", number: "12-43-234345", id: 3 },
+    { name: "Dan Abramov", number: "12-43-234345", id: 3 },
     { name: "Mani Rottendick", number: "39-23-6423122", id: 4 },
   ]);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filter, setFilter] = useState("");
+
+  useEffect(() => {
+    console.log("effect");
+    axios.get("http://localhost:3001/persons").then((response) => {
+      console.log("promise fulfilled");
+      setPersons(response.data);
+    });
+  }, []);
 
   const addContact = (event) => {
     event.preventDefault();
