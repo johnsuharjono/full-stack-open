@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import Filter from "./Components/Filter";
 import PersonForm from "./Components/PersonForm";
 import Persons from "./Components/Persons";
-import axios from "axios";
 import "./App.css";
+import personService from "./services/persons";
 
 const App = () => {
 	const [persons, setPersons] = useState([]);
@@ -12,14 +12,9 @@ const App = () => {
 	const [filter, setFilter] = useState("");
 
 	useEffect(() => {
-		async function getData() {
-			console.log("effect");
-			let response = await axios.get("http://localhost:3001/persons");
-			console.log("promise fullfilled");
-			setPersons(response.data);
-		}
-
-		getData();
+		personService.getAll().then((persons) => {
+			setPersons(persons);
+		});
 	}, []);
 
 	const addContact = (event) => {
@@ -29,19 +24,29 @@ const App = () => {
 			(person) => person.name.toLowerCase() === newName.toLowerCase()
 		);
 		if (check.length === 1) {
-			setNewName("");
-			setNewNumber("");
-			alert(`${newName} is already added to phonebook`);
+			if (window.confirm("Edit the number?")) {
+				const id = check[0].id;
+				const person = persons.find((person) => person.id === check[0].id);
+				const personObject = { ...person, number: newNumber };
+				personService.update(id, personObject).then((response) => {
+					setPersons(
+						persons.map((person) => (person.id !== id ? person : response.data))
+					);
+					setNewName("");
+					setNewNumber("");
+				});
+			}
 		} else {
 			const personObject = {
 				name: newName,
 				number: newNumber,
-				id: persons.length + 1,
 			};
 
-			setPersons([...persons, personObject]);
-			setNewName("");
-			setNewNumber("");
+			personService.create(personObject).then((res) => {
+				setPersons(persons.concat(res.data));
+				setNewName("");
+				setNewNumber("");
+			});
 		}
 	};
 
@@ -79,7 +84,11 @@ const App = () => {
 
 			<h3>Numbers</h3>
 
-			<Persons contactToShow={contactToShow} />
+			<Persons
+				persons={persons}
+				setPersons={setPersons}
+				contactToShow={contactToShow}
+			/>
 		</div>
 	);
 };
